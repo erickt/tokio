@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "sync"), allow(dead_code, unreachable_pub))]
-
 //! A multi-producer, single-consumer queue for sending values across
 //! asynchronous tasks.
 //!
@@ -44,9 +42,6 @@ pub use self::bounded::{channel, Receiver, Sender};
 mod chan;
 
 pub(super) mod list;
-
-mod unbounded;
-pub use self::unbounded::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 pub mod error;
 

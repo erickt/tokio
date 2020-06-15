@@ -196,12 +196,6 @@ where
     }
 }
 
-impl<T> Tx<T, AtomicUsize> {
-    pub(crate) fn send_unbounded(&self, value: T) -> Result<(), (T, TrySendError)> {
-        self.inner.try_send(value, &mut ())
-    }
-}
-
 impl<T, S> Clone for Tx<T, S>
 where
     S: Semaphore,

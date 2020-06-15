@@ -363,16 +363,7 @@ fn is_tx_closed(bits: usize) -> bool {
 
 impl<T> Values<T> {
     unsafe fn uninitialized() -> Values<T> {
-        let mut vals = MaybeUninit::uninit();
-
-        // When fuzzing, `CausalCell` needs to be initialized.
-        if_loom! {
-            let p = vals.as_mut_ptr() as *mut CausalCell<MaybeUninit<T>>;
-            for i in 0..BLOCK_CAP {
-                p.add(i)
-                    .write(CausalCell::new(MaybeUninit::uninit()));
-            }
-        }
+        let vals = MaybeUninit::uninit();
 
         Values(vals.assume_init())
     }

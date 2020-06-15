@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "sync"), allow(dead_code, unreachable_pub))]
-
 //! Thread-safe, asynchronous counting semaphore.
 //!
 //! A `Semaphore` instance holds a set of permits. Permits are used to
@@ -606,14 +604,6 @@ impl Permit {
         Permit {
             waiter: None,
             state: Acquired(0),
-        }
-    }
-
-    /// Returns `true` if the permit has been acquired
-    pub(crate) fn is_acquired(&self) -> bool {
-        match self.state {
-            PermitState::Acquired(num) if num > 0 => true,
-            _ => false,
         }
     }
 

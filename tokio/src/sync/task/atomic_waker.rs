@@ -1,3 +1,4 @@
+
 #![cfg_attr(any(loom, not(feature = "sync")), allow(dead_code, unreachable_pub))]
 
 use crate::loom::cell::CausalCell;

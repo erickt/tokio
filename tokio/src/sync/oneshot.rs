@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "sync"), allow(dead_code, unreachable_pub))]
-
 //! A channel for sending a single message between asynchronous tasks.
 
 use crate::loom::cell::CausalCell;

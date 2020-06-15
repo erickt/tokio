@@ -15,16 +15,6 @@ impl AtomicUsize {
         let inner = UnsafeCell::new(std::sync::atomic::AtomicUsize::new(val));
         AtomicUsize { inner }
     }
-
-    /// Performs an unsynchronized load.
-    ///
-    /// # Safety
-    ///
-    /// All mutations must have happened before the unsynchronized load.
-    /// Additionally, there must be no concurrent mutations.
-    pub(crate) unsafe fn unsync_load(&self) -> usize {
-        *(*self.inner.get()).get_mut()
-    }
 }
 
 impl ops::Deref for AtomicUsize {

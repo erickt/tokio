@@ -176,16 +176,6 @@ impl<T> Receiver<T> {
 
 impl<T> Unpin for Receiver<T> {}
 
-cfg_stream! {
-    impl<T> crate::stream::Stream for Receiver<T> {
-        type Item = T;
-
-        fn poll_next(mut self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<T>> {
-            self.poll_recv(cx)
-        }
-    }
-}
-
 impl<T> Sender<T> {
     pub(crate) fn new(chan: chan::Tx<T, Semaphore>) -> Sender<T> {
         Sender { chan }
