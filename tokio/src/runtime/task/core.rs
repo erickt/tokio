@@ -150,7 +150,7 @@ impl<T: Future> CoreStage<T> {
     ///
     /// `self` must also be pinned. This is handled by storing the task on the
     /// heap.
-    pub(super) fn poll(&self, mut cx: Context<'_>) -> Poll<T::Output> {
+    pub(super) unsafe fn poll(&mut self, mut cx: Context<'_>) -> Poll<T::Output> {
         let res = {
             self.stage.with_mut(|ptr| {
                 // Safety: The caller ensures mutual exclusion to the field.
@@ -178,11 +178,9 @@ impl<T: Future> CoreStage<T> {
     /// # Safety
     ///
     /// The caller must ensure it is safe to mutate the `stage` field.
-    pub(super) fn drop_future_or_output(&self) {
+    pub(super) unsafe fn drop_future_or_output(&mut self) {
         // Safety: the caller ensures mutual exclusion to the field.
-        unsafe {
-            self.set_stage(Stage::Consumed);
-        }
+        self.set_stage(Stage::Consumed);
     }
 
     /// Stores the task output.
@@ -190,11 +188,9 @@ impl<T: Future> CoreStage<T> {
     /// # Safety
     ///
     /// The caller must ensure it is safe to mutate the `stage` field.
-    pub(super) fn store_output(&self, output: super::Result<T::Output>) {
+    pub(super) unsafe fn store_output(&mut self, output: super::Result<T::Output>) {
         // Safety: the caller ensures mutual exclusion to the field.
-        unsafe {
-            self.set_stage(Stage::Finished(output));
-        }
+        self.set_stage(Stage::Finished(output));
     }
 
     /// Takes the task output.
@@ -202,7 +198,7 @@ impl<T: Future> CoreStage<T> {
     /// # Safety
     ///
     /// The caller must ensure it is safe to mutate the `stage` field.
-    pub(super) fn take_output(&self) -> super::Result<T::Output> {
+    pub(super) unsafe fn take_output(&mut self) -> super::Result<T::Output> {
         use std::mem;
 
         self.stage.with_mut(|ptr| {
@@ -214,29 +210,33 @@ impl<T: Future> CoreStage<T> {
         })
     }
 
-    unsafe fn set_stage(&self, stage: Stage<T>) {
+    unsafe fn set_stage(&mut self, stage: Stage<T>) {
         self.stage.with_mut(|ptr| *ptr = stage)
     }
 }
 
 cfg_rt_multi_thread! {
     impl Header {
-        pub(super) unsafe fn set_next(&self, next: Option<NonNull<Header>>) {
+        pub(super) unsafe fn set_next(&mut self, next: Option<NonNull<Header>>) {
             self.queue_next.with_mut(|ptr| *ptr = next);
         }
     }
 }
 
 impl Header {
-    // safety: The caller must guarantee exclusive access to this field, and
-    // must ensure that the id is either 0 or the id of the OwnedTasks
-    // containing this task.
+    /// Sets the owner of this task.
+    ///
+    /// # Safety
+    ///
+    /// The caller must guarantee exclusive access to this field, and
+    /// must ensure that the id is either 0 or the id of the OwnedTasks
+    /// containing this task.
     pub(super) unsafe fn set_owner_id(&self, owner: u64) {
         self.owner_id.with_mut(|ptr| *ptr = owner);
     }
 
     pub(super) fn get_owner_id(&self) -> u64 {
-        // safety: If there are concurrent writes, then that write has violated
+        // Safety: If there are concurrent writes, then that write has violated
         // the safety requirements on `set_owner_id`.
         unsafe { self.owner_id.with(|ptr| *ptr) }
     }
@@ -254,7 +254,10 @@ impl Trailer {
             .with(|ptr| (*ptr).as_ref().unwrap().will_wake(waker))
     }
 
-    pub(super) fn wake_join(&self) {
+    /// # Safety
+    ///
+    /// The caller must ensure it is safe to mutate the `waker` field.
+    pub(super) unsafe fn wake_join(&self) {
         self.waker.with(|ptr| match unsafe { &*ptr } {
             Some(waker) => waker.wake_by_ref(),
             None => panic!("waker missing"),

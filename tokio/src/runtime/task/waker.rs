@@ -109,7 +109,7 @@ where
     S: Schedule,
 {
     let ptr = NonNull::new_unchecked(ptr as *mut Header);
-    let harness = Harness::<T, S>::from_raw(ptr);
+    let mut harness = Harness::<T, S>::from_raw(ptr);
     trace!(harness, "waker.wake_by_ref");
     harness.wake_by_ref();
 }

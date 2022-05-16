@@ -213,8 +213,8 @@ fn get_next(header: NonNull<task::Header>) -> Option<NonNull<task::Header>> {
     unsafe { header.as_ref().queue_next.with(|ptr| *ptr) }
 }
 
-fn set_next(header: NonNull<task::Header>, val: Option<NonNull<task::Header>>) {
+fn set_next(mut header: NonNull<task::Header>, val: Option<NonNull<task::Header>>) {
     unsafe {
-        header.as_ref().set_next(val);
+        header.as_mut().set_next(val);
     }
 }
